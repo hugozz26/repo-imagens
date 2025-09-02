@@ -12,8 +12,6 @@
         :root {
             --primary-color: #0d47a1; /* Azul escuro */
             --secondary-color: #1976d2; /* Azul médio */
-            --success-color: #28a745; /* Verde */
-            --danger-color: #dc3545; /* Vermelho */
             --light-bg: #f8f9fa;
             --text-color: #333;
             --white-color: #ffffff;
@@ -85,6 +83,8 @@
             background-color: var(--white-color); border-radius: var(--border-radius);
             box-shadow: var(--shadow); overflow: hidden; text-align: center;
             transition: transform 0.3s, box-shadow 0.3s; position: relative;
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
         }
         .shirt-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); }
         .shirt-images { display: flex; }
@@ -97,22 +97,6 @@
             border-radius: 50px; cursor: pointer; transition: background-color 0.3s, transform 0.3s;
         }
         .details-btn:hover { background-color: var(--secondary-color); transform: scale(1.05); }
-
-        /* Ações do Admin no Card */
-        .card-admin-actions {
-            position: absolute; top: 10px; right: 10px; display: flex; gap: 8px;
-            background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 50px;
-        }
-        .admin-btn {
-            border: none; background: none; cursor: pointer; width: 32px; height: 32px;
-            display: flex; align-items: center; justify-content: center; border-radius: 50%;
-            transition: background-color 0.3s;
-        }
-        .admin-btn svg { width: 18px; height: 18px; }
-        .edit-btn { color: var(--secondary-color); }
-        .edit-btn:hover { background-color: #e3f2fd; }
-        .delete-btn { color: var(--danger-color); }
-        .delete-btn:hover { background-color: #fbe9e7; }
         
         /* --- Modal de Detalhes (Visualização) --- */
         .modal {
@@ -133,19 +117,6 @@
         .modal-images { display: flex; gap: 20px; margin-bottom: 20px; }
         .modal-images img { width: 50%; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         #modal-shirt-desc { font-size: 1rem; color: #555; margin-bottom: 20px; }
-
-        /* --- Controles do Administrador --- */
-        .admin-controls-section { padding: 40px 0; background-color: var(--white-color); text-align: center; }
-        
-        /* Modal de Edição/Criação */
-        .form-group { margin-bottom: 15px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem;
-        }
-        .form-group textarea { resize: vertical; min-height: 80px; }
-        #save-shirt-btn { background-color: var(--success-color); }
-        #save-shirt-btn:hover { background-color: #218838; }
 
         /* --- Rodapé --- */
         .site-footer { text-align: center; padding: 30px 0; margin-top: 40px; border-top: 1px solid #e0e0e0; }
@@ -181,14 +152,6 @@
             <div class="container"> <h1 class="hero-title">Coleção Oficial - Interclasse</h1> </div>
         </section>
 
-        <!-- Seção de Controles do Admin -->
-        <section id="admin-controls" class="admin-controls-section">
-            <div class="container">
-                <h2 class="section-title">Controles do Administrador</h2>
-                <button id="add-new-shirt-btn" class="details-btn">Adicionar Nova Camisa</button>
-            </div>
-        </section>
-
         <section id="sponsored" class="shirts-section">
             <div class="container">
                 <h2 class="section-title">Camisas com Patrocínio</h2>
@@ -221,50 +184,14 @@
         </div>
     </div>
 
-    <!-- Modal de Adicionar/Editar Camisa -->
-    <div id="admin-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2 id="admin-modal-title">Adicionar Nova Camisa</h2>
-            <form id="shirt-form">
-                <input type="hidden" id="shirt-id">
-                <div class="form-group">
-                    <label for="shirt-form-name">Nome da Camisa</label>
-                    <input type="text" id="shirt-form-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="shirt-form-desc">Descrição</label>
-                    <textarea id="shirt-form-desc" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="shirt-form-img-front">URL da Imagem (Frente)</label>
-                    <input type="url" id="shirt-form-img-front" placeholder="https://..." required>
-                </div>
-                <div class="form-group">
-                    <label for="shirt-form-img-back">URL da Imagem (Verso)</label>
-                    <input type="url" id="shirt-form-img-back" placeholder="https://..." required>
-                </div>
-                <div class="form-group">
-                    <label for="shirt-form-sponsored">Categoria</label>
-                    <select id="shirt-form-sponsored">
-                        <option value="true">Com Patrocínio</option>
-                        <option value="false">Sem Patrocínio</option>
-                    </select>
-                </div>
-                <button type="submit" id="save-shirt-btn" class="details-btn">Salvar</button>
-            </form>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE ---
-            // Substitua pelo seu objeto de configuração do Firebase
             const firebaseConfig = {
                 apiKey: "AIzaSyDzD7ljG2HogGDItprNNyXYv5ENSPSb1i4",
                 authDomain: "interclasse-c0993.firebaseapp.com",
@@ -290,8 +217,6 @@
             const sponsoredGrid = document.getElementById('sponsored-grid');
             const unsponsoredGrid = document.getElementById('unsponsored-grid');
             const viewModal = document.getElementById('view-modal');
-            const adminModal = document.getElementById('admin-modal');
-            const shirtForm = document.getElementById('shirt-form');
 
             // --- FUNÇÕES DE RENDERIZAÇÃO ---
             const renderShirtsUI = (shirts) => {
@@ -302,13 +227,13 @@
                 const unsponsoredShirts = shirts.filter(s => !s.sponsored);
 
                 if (sponsoredShirts.length === 0) {
-                    sponsoredGrid.innerHTML = '<p class="empty-grid-message">Nenhuma camisa com patrocínio adicionada.</p>';
+                    sponsoredGrid.innerHTML = '<p class="empty-grid-message">Nenhuma camisa com patrocínio disponível.</p>';
                 } else {
                     sponsoredShirts.forEach(shirt => sponsoredGrid.innerHTML += createShirtCardHTML(shirt));
                 }
                 
                 if (unsponsoredShirts.length === 0) {
-                    unsponsoredGrid.innerHTML = '<p class="empty-grid-message">Nenhuma camisa sem patrocínio adicionada.</p>';
+                    unsponsoredGrid.innerHTML = '<p class="empty-grid-message">Nenhuma camisa sem patrocínio disponível.</p>';
                 } else {
                     unsponsoredShirts.forEach(shirt => unsponsoredGrid.innerHTML += createShirtCardHTML(shirt));
                 }
@@ -316,10 +241,6 @@
 
             const createShirtCardHTML = (shirt) => `
                 <div class="shirt-card" data-id="${shirt.id}">
-                    <div class="card-admin-actions">
-                        <button class="admin-btn edit-btn" title="Editar"><svg fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button>
-                        <button class="admin-btn delete-btn" title="Excluir"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg></button>
-                    </div>
                     <div class="shirt-images">
                         <img src="${shirt.imgFront}" alt="Frente de ${shirt.name}" onerror="this.src='https://placehold.co/400x500?text=Erro'">
                         <img src="${shirt.imgBack}" alt="Verso de ${shirt.name}" onerror="this.src='https://placehold.co/400x500?text=Erro'">
@@ -337,76 +258,29 @@
                     });
                     renderShirtsUI(localShirtsCache);
                 }, (error) => {
-                    console.error("Erro ao ouvir as camisas:", error);
+                    console.error("Erro ao carregar as camisas:", error);
                 });
             }
 
-            // --- LÓGICA DOS MODAIS ---
+            // --- LÓGICA DO MODAL DE VISUALIZAÇÃO ---
             const openModal = (modal) => modal.classList.add('active');
             const closeModal = (modal) => modal.classList.remove('active');
             document.querySelectorAll('.modal .close-btn').forEach(btn => btn.addEventListener('click', () => closeModal(btn.closest('.modal'))));
             document.querySelectorAll('.modal').forEach(modal => modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(modal); }));
 
             // --- MANIPULAÇÃO DE EVENTOS ---
-            document.getElementById('add-new-shirt-btn').addEventListener('click', () => {
-                shirtForm.reset();
-                document.getElementById('shirt-id').value = '';
-                document.getElementById('admin-modal-title').textContent = 'Adicionar Nova Camisa';
-                openModal(adminModal);
-            });
-
             document.body.addEventListener('click', (e) => {
                 const shirtCard = e.target.closest('.shirt-card');
                 if (!shirtCard) return;
-                const shirtId = shirtCard.dataset.id;
-                const shirt = localShirtsCache.find(s => s.id === shirtId);
 
                 if (e.target.classList.contains('details-btn')) {
+                    const shirtId = shirtCard.dataset.id;
+                    const shirt = localShirtsCache.find(s => s.id === shirtId);
                     document.getElementById('modal-shirt-name').textContent = shirt.name;
                     document.getElementById('modal-img-front').src = shirt.imgFront;
                     document.getElementById('modal-img-back').src = shirt.imgBack;
                     document.getElementById('modal-shirt-desc').textContent = shirt.desc;
                     openModal(viewModal);
-                }
-                
-                if (e.target.closest('.edit-btn')) {
-                    document.getElementById('admin-modal-title').textContent = 'Editar Camisa';
-                    document.getElementById('shirt-id').value = shirt.id;
-                    document.getElementById('shirt-form-name').value = shirt.name;
-                    document.getElementById('shirt-form-desc').value = shirt.desc;
-                    document.getElementById('shirt-form-img-front').value = shirt.imgFront;
-                    document.getElementById('shirt-form-img-back').value = shirt.imgBack;
-                    document.getElementById('shirt-form-sponsored').value = shirt.sponsored.toString();
-                    openModal(adminModal);
-                }
-                
-                if (e.target.closest('.delete-btn')) {
-                    const docRef = doc(db, shirtsCollectionPath, shirtId);
-                    deleteDoc(docRef).catch(error => console.error("Erro ao excluir:", error));
-                }
-            });
-
-            shirtForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const id = document.getElementById('shirt-id').value;
-                const shirtData = {
-                    name: document.getElementById('shirt-form-name').value,
-                    desc: document.getElementById('shirt-form-desc').value,
-                    imgFront: document.getElementById('shirt-form-img-front').value,
-                    imgBack: document.getElementById('shirt-form-img-back').value,
-                    sponsored: document.getElementById('shirt-form-sponsored').value === 'true'
-                };
-                
-                try {
-                    if (id) { // Editando
-                        const docRef = doc(db, shirtsCollectionPath, id);
-                        await updateDoc(docRef, shirtData);
-                    } else { // Adicionando
-                        await addDoc(shirtsColRef, shirtData);
-                    }
-                    closeModal(adminModal);
-                } catch (error) {
-                    console.error("Erro ao salvar camisa:", error);
                 }
             });
 
@@ -418,8 +292,8 @@
                     } else {
                         await signInAnonymously(auth);
                     }
-                    console.log("Usuário autenticado:", auth.currentUser?.uid);
-                    listenForShirts(); // Começa a ouvir o banco de dados
+                    console.log("Conectado para visualização.");
+                    listenForShirts(); // Começa a carregar as camisas do banco de dados
                 } catch (error) {
                     console.error("Falha na autenticação do Firebase:", error);
                 }
@@ -430,5 +304,4 @@
     </script>
 </body>
 </html>
-
 
